@@ -37,6 +37,8 @@ class GUIdeviceWindow():
 		self.AppsListBox = self.builder.get_object("appsDocumentListBox")
 		self.lastAppCount = 0
 		self.sysLogging = False
+		#Proper exit:
+		self.window.connect("destroy", Gtk.main_quit)
 		
 	def setAppListing(self):
 		import instproxy_browse_installed_app
