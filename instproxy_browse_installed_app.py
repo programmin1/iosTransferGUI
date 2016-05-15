@@ -71,6 +71,16 @@ def list_installed_app(app_type="Any"):
 			"CFBundleIdentifier",
 			"CFBundleName",
 			"CFBundleVersion",
+			"Container",
+			"CFBundleDocumentTypes",
+			"Entitlements",
+			"Path",
+			"EnvironmentVariables",
+			"ApplicationType",
+			"UIPrerenderedIcon",
+			"UTExportedTypeDeclarations",
+			"UTImportedTypeDeclarations",
+			"UIFileSharingEnabled"
 		]),
 	})
 

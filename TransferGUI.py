@@ -51,7 +51,10 @@ class GUIdeviceWindow():
 			for app in listing:
 				app_name = app["CFBundleName"].get_value().encode("utf8")
 				#print "%s - %s %s" % (app["CFBundleIdentifier"], app_name, app["CFBundleVersion"])
-				self.addApp( app["CFBundleIdentifier"], "%s %s" % (app_name, app["CFBundleVersion"]) )
+				#print app["UIFileSharingEnabled"]
+				
+				if ("UIFileSharingEnabled" in app) and app["UIFileSharingEnabled"] == True:
+					self.addApp( app["CFBundleIdentifier"], "%s %s" % (app_name, app["CFBundleVersion"]) )
 			self.AppsListBox.show_all()
 			self.lastAppCount = len(listing)
 				
@@ -198,6 +201,8 @@ class AppHandlerRow(Gtk.ListBoxRow):
 		if not os.path.exists( MOUNTS ):
 			os.mkdir( MOUNTS )
 		mountdir = os.path.join( MOUNTS, self.id )
+		if os.path.exists( mountdir ):
+			os.system("fusermount -u " + mountdir + "; rmdir " + mountdir)
 		
 		if not self.connected: #connect:
 			if not os.path.exists( mountdir ):
