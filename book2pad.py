@@ -41,18 +41,31 @@ def new_plist():
     return et.ElementTree(root)
 
 def parse_plist(plist):
+    #Warning: new_plist() when not new, will wipe out books from device!
     if os.path.exists(plist):
         tree = et.parse(plist)
     else:
+        #print (os.path.dirname(plist))
+        #print (os.path.dirname( os.path.dirname( plist ) ) )
         if not os.path.isdir(os.path.dirname(plist)):
-            os.makedirs(os.path.dirname(plist))
-        tree = new_plist()
+            if os.path.isdir(os.path.dirname( os.path.dirname( plist ) ) ):
+                #Does exist, not just flakey connection to device.
+                os.makedirs(os.path.dirname(plist))
+                print "Initializing a new booklist!!"
+                tree = new_plist()
+            else:
+                print( "Connection problem? %s" % ((os.path.dirname( os.path.dirname( plist ) ) ), ) )
+                raise IOError
+
     try:
         if not tree.getroot()[0][1].tag == 'array':
             raise IndexError
-    except:
+    except IndexError:
+        print "Creating new-plist due to error"
         tree = new_plist()
+    
     finally:
+        #If tree = new_plist() here but there were books, iBooks removes them!
         return (tree, tree.getroot()[0][1])
 
 class Book(et.Element):
@@ -102,6 +115,8 @@ def addbooks(root_dir, books):
             tree = biplist.readPlist(plist)
             assert tree.items()[0][0] == 'Books'
             array = tree.items()[0][1]
+            # ^ array of {'Path': '20-python-libraries-you-arent-using-but-should.epub', 'Package Hash': '141ADA5A4CCBA7695C002D0F11F29642', 'Name': '20-python-libraries-you-arent-using-but-should'}
+            # or similar.
             optimized = True #biplist optimized.
             print "Optimized plist"
         dest = os.path.dirname(plist)
@@ -129,14 +144,21 @@ def addbooks(root_dir, books):
                         array.append(Book(book))
                     shutil.copyfile(book, os.path.join(dest, os.path.basename(book)))
                 elif '.EPUB' == ext:
-                    if optimized:
-                        array.append( optimizedEntry(book) )
-                    else:
-                        array.append(Book(book))
                     folder = os.path.join(dest, os.path.basename(book))
-                    os.mkdir(folder)
-                    with zipfile.ZipFile(book, "r") as z:
-                            z.extractall(folder)
+                    if os.path.exists( folder ):
+                        # overwriting and adding makes duplicate entry
+                        print "Already exists: %s" % (folder,)
+                        #print "replacing %s" % (folder,)
+                        #shutil.rmtree( folder )
+                    else:
+                        if optimized:
+                            array.append( optimizedEntry(book) )
+                        else:
+                            array.append(Book(book))
+                        
+                        os.mkdir(folder)
+                        with zipfile.ZipFile(book, "r") as z:
+                                z.extractall(folder)
                 else:
                     fail_list.append(book)
             step_len += bar_len
